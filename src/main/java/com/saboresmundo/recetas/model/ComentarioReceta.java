@@ -1,5 +1,6 @@
 package com.saboresmundo.recetas.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -23,6 +24,7 @@ public class ComentarioReceta {
     private String comentario;
 
     @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime fecha;
 
     public ComentarioReceta() {
