@@ -19,4 +19,17 @@ public class PaisController {
         List<Pais> paises = paisService.listarPaises();
         return ResponseEntity.ok(paises);
     }
+
+    @PostMapping
+    public ResponseEntity<Pais> crearPais(@RequestBody Pais pais) {
+        Pais nuevo = paisService.crearPais(pais);
+        return ResponseEntity.ok(nuevo);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Pais> consultarPais(@PathVariable Long id) {
+        return paisService.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

@@ -20,4 +20,8 @@ public class PaisService {
     public Optional<Pais> buscarPorId(Long id) {
         return paisRepository.findById(id);
     }
+
+    public Pais crearPais(Pais pais) {
+        return paisRepository.save(pais);
+    }
 }
