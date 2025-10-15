@@ -29,12 +29,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Temporalmente permitimos todos los accesos para depurar
-                        .requestMatchers("/api/recetas/**").permitAll()
-                        .requestMatchers("/api/usuarios/**").permitAll()
-                        .requestMatchers("/api/paises/**").permitAll()
-                        .requestMatchers("/api/admin/**").permitAll()
-                        .anyRequest().permitAll())
+                        .requestMatchers("/api/usuarios/**").hasAuthority("ADMIN") // Solo ADMIN puede acceder a
+                                                                                   // usuarios
+                        .requestMatchers("/api/recetas/**").authenticated()
+                        .requestMatchers("/api/paises/**").authenticated()
+                        .requestMatchers("/api/ingredientes/**").authenticated()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
