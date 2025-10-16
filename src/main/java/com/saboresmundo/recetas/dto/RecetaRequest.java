@@ -2,6 +2,10 @@ package com.saboresmundo.recetas.dto;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class RecetaRequest {
     private String titulo;
     private String descripcion;
@@ -78,9 +82,17 @@ public class RecetaRequest {
 
     public static class IngredienteRequest {
         private Long ingredienteId; // Para ingredientes existentes
+
+        @Size(max = 100)
         private String nombre; // Para ingredientes nuevos
+
+        @Size(max = 500)
         private String descripcion; // Para ingredientes nuevos
+
+        @NotBlank
         private String cantidad;
+
+        @NotBlank
         private String unidad;
 
         public Long getIngredienteId() {
@@ -125,8 +137,12 @@ public class RecetaRequest {
     }
 
     public static class PasoRequest {
+        @NotNull
         private Integer orden;
+
+        @NotBlank
         private String descripcion;
+
         private String fotoUrl;
 
         public Integer getOrden() {
