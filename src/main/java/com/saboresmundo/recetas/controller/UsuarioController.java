@@ -4,6 +4,7 @@ import com.saboresmundo.recetas.model.Usuario;
 import com.saboresmundo.recetas.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,5 +40,17 @@ public class UsuarioController {
     public ResponseEntity<List<Usuario>> listarUsuarios() {
         List<Usuario> usuarios = usuarioService.listarTodos();
         return ResponseEntity.ok(usuarios);
+    }
+
+    // Solo ADMIN puede eliminar usuarios
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
+        boolean eliminado = usuarioService.eliminarUsuario(id);
+        if (eliminado) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

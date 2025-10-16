@@ -16,10 +16,10 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(length = 255)
+    @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "foto_perfil", columnDefinition = "text")
     private String fotoPerfil;
 
     @ManyToOne(fetch = FetchType.LAZY)
