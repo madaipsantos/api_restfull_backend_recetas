@@ -77,9 +77,19 @@ public class RecetaRequest {
     }
 
     public static class IngredienteRequest {
-        private String nombre;
+        private Long ingredienteId; // Para ingredientes existentes
+        private String nombre; // Para ingredientes nuevos
+        private String descripcion; // Para ingredientes nuevos
         private String cantidad;
         private String unidad;
+
+        public Long getIngredienteId() {
+            return ingredienteId;
+        }
+
+        public void setIngredienteId(Long ingredienteId) {
+            this.ingredienteId = ingredienteId;
+        }
 
         public String getNombre() {
             return nombre;
@@ -87,6 +97,14 @@ public class RecetaRequest {
 
         public void setNombre(String nombre) {
             this.nombre = nombre;
+        }
+
+        public String getDescripcion() {
+            return descripcion;
+        }
+
+        public void setDescripcion(String descripcion) {
+            this.descripcion = descripcion;
         }
 
         public String getCantidad() {

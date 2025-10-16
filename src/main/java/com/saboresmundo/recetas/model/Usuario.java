@@ -22,22 +22,17 @@ public class Usuario {
     @Column(name = "foto_perfil", columnDefinition = "text")
     private String fotoPerfil;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pais_id")
-    private Pais pais;
-
     @Column(nullable = false, length = 20)
     private String rol; // Ejemplo: "USUARIO", "AUTOR", "ADMIN"
 
     public Usuario() {
     }
 
-    public Usuario(String nombre, String email, String passwordHash, String fotoPerfil, Pais pais) {
+    public Usuario(String nombre, String email, String passwordHash, String fotoPerfil) {
         this.nombre = nombre;
         this.email = email;
         this.passwordHash = passwordHash;
         this.fotoPerfil = fotoPerfil;
-        this.pais = pais;
     }
 
     public Long getId() {
@@ -76,14 +71,6 @@ public class Usuario {
         this.fotoPerfil = fotoPerfil;
     }
 
-    public Pais getPais() {
-        return pais;
-    }
-
-    public void setPais(Pais pais) {
-        this.pais = pais;
-    }
-
     public String getRol() {
         return rol;
     }
@@ -115,7 +102,6 @@ public class Usuario {
                 ", email='" + email + '\'' +
                 ", rol='" + rol + '\'' +
                 ", fotoPerfil='" + fotoPerfil + '\'' +
-                ", pais=" + (pais != null ? pais.getId() : null) +
                 '}';
     }
 }

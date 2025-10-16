@@ -17,9 +17,6 @@ public class RegisterRequest {
     @Size(min = 6, max = 100)
     private String password;
 
-    @NotBlank
-    private String rol;
-
     // Getters y setters
     public String getNombre() {
         return nombre;
@@ -43,13 +40,5 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getRol() {
-        return rol;
-    }
-
-    public void setRol(String rol) {
-        this.rol = rol;
     }
 }
