@@ -20,7 +20,7 @@ public class PasoReceta {
     @Column(nullable = false, columnDefinition = "text")
     private String descripcion;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "foto_url", columnDefinition = "text")
     private String fotoUrl;
 
     public PasoReceta() {

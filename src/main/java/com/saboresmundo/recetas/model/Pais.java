@@ -13,7 +13,7 @@ public class Pais {
     @Column(nullable = false, unique = true, length = 100)
     private String nombre;
 
-    @Column(unique = true, length = 10)
+    @Column(name = "codigo_iso", unique = true, length = 10)
     private String codigoIso;
 
     @Column(length = 50)

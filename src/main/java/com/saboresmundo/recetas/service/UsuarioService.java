@@ -26,4 +26,12 @@ public class UsuarioService {
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }
+
+    public boolean eliminarUsuario(Long id) {
+        if (usuarioRepository.existsById(id)) {
+            usuarioRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }

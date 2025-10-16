@@ -17,7 +17,7 @@ public class Receta {
     @Column(columnDefinition = "text")
     private String descripcion;
 
-    @Column
+    @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
 
     @Column(length = 50)
@@ -26,7 +26,7 @@ public class Receta {
     @Column
     private Float valoracion;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "foto_url", columnDefinition = "text")
     private String fotoUrl;
 
     @Column(length = 20)
