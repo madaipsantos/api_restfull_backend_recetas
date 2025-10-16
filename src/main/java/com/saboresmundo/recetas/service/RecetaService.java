@@ -20,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -127,25 +126,31 @@ public class RecetaService {
     }
 
     private void procesarIngredientes(Receta receta, List<RecetaRequest.IngredienteRequest> ingredientesRequest) {
-        for (RecetaRequest.IngredienteRequest ingredienteRequest : ingredientesRequest) {
-            // Buscar si el ingrediente ya existe por nombre
-            Ingrediente ingrediente = ingredienteRepository.findByNombreIgnoreCase(ingredienteRequest.getNombre())
-                    .orElseGet(() -> {
-                        // Si no existe, crear uno nuevo
-                        Ingrediente nuevoIngrediente = new Ingrediente();
-                        nuevoIngrediente.setNombre(ingredienteRequest.getNombre());
-                        return ingredienteRepository.save(nuevoIngrediente);
-                    });
-
-            // Crear la relación entre receta e ingrediente
-            RecetaIngrediente recetaIngrediente = new RecetaIngrediente();
-            recetaIngrediente.setReceta(receta);
-            recetaIngrediente.setIngrediente(ingrediente);
-            recetaIngrediente.setCantidad(ingredienteRequest.getCantidad());
-            recetaIngrediente.setUnidad(ingredienteRequest.getUnidad());
-
-            recetaIngredienteRepository.save(recetaIngrediente);
-            logger.info("Ingrediente agregado a receta: {}", ingrediente.getNombre());
+        for (RecetaRequest.IngredienteRequest ir : ingredientesRequest) {
+            Ingrediente ingrediente = null;
+            if (ir.getIngredienteId() != null) {
+                ingrediente = ingredienteRepository.findById(ir.getIngredienteId()).orElse(null);
+            } else if (ir.getNombre() != null && !ir.getNombre().trim().isEmpty()) {
+                ingrediente = ingredienteRepository.findByNombreIgnoreCase(ir.getNombre())
+                        .orElseGet(() -> {
+                            Ingrediente nuevoIngrediente = new Ingrediente();
+                            nuevoIngrediente.setNombre(ir.getNombre());
+                            nuevoIngrediente.setDescripcion(ir.getDescripcion());
+                            return ingredienteRepository.save(nuevoIngrediente);
+                        });
+            } else {
+                // Si no hay nombre ni ingredienteId, omitir este ingrediente
+                continue;
+            }
+            if (ingrediente != null) {
+                RecetaIngrediente recetaIngrediente = new RecetaIngrediente();
+                recetaIngrediente.setReceta(receta);
+                recetaIngrediente.setIngrediente(ingrediente);
+                recetaIngrediente.setCantidad(ir.getCantidad());
+                recetaIngrediente.setUnidad(ir.getUnidad());
+                recetaIngredienteRepository.save(recetaIngrediente);
+                logger.info("Ingrediente agregado a receta: {}", ingrediente.getNombre());
+            }
         }
     }
 
