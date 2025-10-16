@@ -2,10 +2,8 @@ package com.saboresmundo.recetas.service;
 
 import com.saboresmundo.recetas.model.ComentarioReceta;
 import com.saboresmundo.recetas.model.Receta;
-import com.saboresmundo.recetas.model.Usuario;
 import com.saboresmundo.recetas.repository.ComentarioRecetaRepository;
 import com.saboresmundo.recetas.repository.RecetaRepository;
-import com.saboresmundo.recetas.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -20,9 +18,6 @@ public class ComentarioService {
 
     @Autowired
     private RecetaRepository recetaRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
 
     public ComentarioReceta agregarComentario(Long recetaId, ComentarioReceta comentario) {
         Optional<Receta> recetaOpt = recetaRepository.findById(recetaId);
