@@ -34,7 +34,6 @@ class AuthServiceTest {
         request.setNombre("Test");
         request.setEmail("test@email.com");
         request.setPassword("password");
-        request.setRol("USUARIO");
 
         when(passwordEncoder.encode(anyString())).thenReturn("hashed");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
