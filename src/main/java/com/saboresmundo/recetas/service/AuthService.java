@@ -69,7 +69,11 @@ public class AuthService {
             return ResponseEntity.status(401).body("Credenciales inválidas");
         }
         String token = jwtUtil.generateToken(usuario.getEmail());
-        // Devuelve el token en un objeto JSON
-        return ResponseEntity.ok(java.util.Collections.singletonMap("token", token));
+        // Devuelve token, email y nombre en el objeto JSON
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("token", token);
+        response.put("email", usuario.getEmail());
+        response.put("nombre", usuario.getNombre());
+        return ResponseEntity.ok(response);
     }
 }
