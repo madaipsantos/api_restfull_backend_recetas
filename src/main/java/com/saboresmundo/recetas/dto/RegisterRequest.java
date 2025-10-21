@@ -24,6 +24,17 @@ public class RegisterRequest {
     @Size(min = 6, max = 100)
     private String password;
 
+    @NotBlank
+    private String foto;
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
+    }
+
     // Getters y setters
     public String getNombre() {
         return nombre;

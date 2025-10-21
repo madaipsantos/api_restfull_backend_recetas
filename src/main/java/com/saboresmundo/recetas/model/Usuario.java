@@ -24,6 +24,16 @@ public class Usuario {
 
     @Column(nullable = false, length = 20)
     private String rol; // Ejemplo: "USUARIO", "AUTOR", "ADMIN"
+    @Column(name = "foto", columnDefinition = "text")
+    private String foto;
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
+    }
 
     public Usuario() {
     }
