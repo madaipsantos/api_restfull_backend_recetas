@@ -59,6 +59,7 @@ public class AuthService {
         usuario.setEmail(request.getEmail());
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword())); // Hashear la contraseña
         usuario.setRol("USUARIO"); // Establecer rol por defecto
+        usuario.setFoto(request.getFoto()); // Guardar la foto del usuario
         usuarioRepository.save(usuario);
         return ResponseEntity.ok("Usuario registrado");
     }
