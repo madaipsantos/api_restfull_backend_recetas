@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ComentarioServiceTest {
 
-
     @Mock
     private ComentarioRecetaRepository comentarioRecetaRepository;
 
