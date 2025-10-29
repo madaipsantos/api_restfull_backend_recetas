@@ -3,6 +3,12 @@ package com.saboresmundo.recetas.controller;
 import com.saboresmundo.recetas.dto.RecetaListItemResponse;
 import com.saboresmundo.recetas.dto.RecetaRequest;
 import com.saboresmundo.recetas.dto.RecetaResponse;
+import com.saboresmundo.recetas.dto.ComentarioRequest;
+import com.saboresmundo.recetas.model.ComentarioReceta;
+import com.saboresmundo.recetas.model.Usuario;
+import com.saboresmundo.recetas.repository.ComentarioRecetaRepository;
+import com.saboresmundo.recetas.repository.RecetaRepository;
+import com.saboresmundo.recetas.repository.UsuarioRepository;
 import com.saboresmundo.recetas.model.Receta;
 import com.saboresmundo.recetas.service.RecetaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +27,61 @@ public class RecetaController {
 
     @Autowired
     private RecetaService recetaService;
+
+    @Autowired
+    private ComentarioRecetaRepository comentarioRecetaRepository;
+
+    @Autowired
+    private RecetaRepository recetaRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private com.saboresmundo.recetas.service.ComentarioService comentarioService;
+
+    @PutMapping("/{recetaId}/comentarios/{comentarioId}")
+    public ResponseEntity<?> editarComentario(@PathVariable Long recetaId,
+            @PathVariable Long comentarioId,
+            @RequestBody ComentarioRequest comentarioRequest) {
+        try {
+            // Verificar que la receta existe
+            var recetaOpt = recetaRepository.findById(recetaId);
+            if (recetaOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Receta no encontrada"));
+            }
+
+            // Verificar que el comentario pertenece a la receta
+            var comentarioOpt = comentarioRecetaRepository.findById(comentarioId);
+            if (comentarioOpt.isEmpty() || !comentarioOpt.get().getReceta().getId().equals(recetaId)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Comentario no encontrado para esta receta"));
+            }
+
+            // Editar el comentario
+            ComentarioReceta actualizado = comentarioService.editarComentario(
+                    comentarioId,
+                    comentarioRequest.getComentario(),
+                    comentarioRequest.getValoracion());
+
+            // Actualizar el promedio de valoraciones de la receta
+            var comentarios = comentarioRecetaRepository.findByReceta(recetaOpt.get());
+            double promedio = comentarios.stream()
+                    .filter(c -> c.getValoracion() != null)
+                    .mapToInt(ComentarioReceta::getValoracion)
+                    .average()
+                    .orElse(0.0);
+            recetaOpt.get().setValoracion((float) promedio);
+            recetaRepository.save(recetaOpt.get());
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error al editar comentario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error al editar comentario: " + e.getMessage()));
+        }
+    }
 
     @GetMapping
     public ResponseEntity<?> listarRecetas(@RequestParam(required = false) String filtro) {
@@ -96,6 +157,63 @@ public class RecetaController {
         } else {
             logger.error("Error al eliminar receta: {}", response.getMensaje());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<?> obtenerRecetasPorUsuario(@PathVariable Long usuarioId) {
+        try {
+            logger.info("Obteniendo recetas del usuario con ID: {}", usuarioId);
+            List<RecetaResponse> recetas = recetaService.obtenerRecetasPorUsuario(usuarioId);
+            return ResponseEntity.ok(recetas);
+        } catch (Exception e) {
+            logger.error("Error al obtener recetas del usuario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error al obtener las recetas: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/comentarios")
+    public ResponseEntity<?> agregarComentario(@PathVariable Long id,
+            @RequestBody ComentarioRequest comentarioRequest) {
+        try {
+            logger.info("Agregando comentario a receta ID: {}", id);
+            var recetaOpt = recetaRepository.findById(id);
+            if (recetaOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Receta no encontrada"));
+            }
+            Receta receta = recetaOpt.get();
+
+            Usuario usuario = null;
+            if (comentarioRequest.getUsuarioId() != null) {
+                usuario = usuarioRepository.findById(comentarioRequest.getUsuarioId()).orElse(null);
+            }
+
+            ComentarioReceta comentario = new ComentarioReceta();
+            comentario.setReceta(receta);
+            comentario.setUsuario(usuario);
+            comentario.setComentario(comentarioRequest.getComentario());
+            comentario.setValoracion(comentarioRequest.getValoracion());
+            comentario.setFecha(java.time.LocalDateTime.now());
+
+            comentarioRecetaRepository.save(comentario);
+
+            // Actualizar el promedio de valoraciones de la receta
+            var comentarios = comentarioRecetaRepository.findByReceta(receta);
+            double promedio = comentarios.stream()
+                    .filter(c -> c.getValoracion() != null)
+                    .mapToInt(ComentarioReceta::getValoracion)
+                    .average()
+                    .orElse(0.0);
+            receta.setValoracion((float) promedio);
+            recetaRepository.save(receta);
+
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (Exception e) {
+            logger.error("Error al agregar comentario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error al agregar comentario: " + e.getMessage()));
         }
     }
 }

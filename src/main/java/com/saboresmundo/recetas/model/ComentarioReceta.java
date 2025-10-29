@@ -24,6 +24,9 @@ public class ComentarioReceta {
     private String comentario;
 
     @Column
+    private Integer valoracion;
+
+    @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime fecha;
 
@@ -39,6 +42,13 @@ public class ComentarioReceta {
 
     public Long getId() {
         return id;
+    }
+
+    /**
+     * Solo para uso en pruebas unitarias
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Receta getReceta() {
@@ -63,6 +73,14 @@ public class ComentarioReceta {
 
     public void setComentario(String comentario) {
         this.comentario = comentario;
+    }
+
+    public Integer getValoracion() {
+        return valoracion;
+    }
+
+    public void setValoracion(Integer valoracion) {
+        this.valoracion = valoracion;
     }
 
     public LocalDateTime getFecha() {

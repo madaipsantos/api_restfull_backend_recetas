@@ -55,6 +55,15 @@ public class RecetaService {
     }
 
     @Transactional(readOnly = true)
+    public List<RecetaResponse> obtenerRecetasPorUsuario(Long usuarioId) {
+        logger.info("Buscando recetas para el usuario con ID: {}", usuarioId);
+        List<Receta> recetas = recetaRepository.findByUsuarioId(usuarioId);
+        return recetas.stream()
+                .map(RecetaResponse::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public Receta findById(Long id) {
         Optional<Receta> receta = recetaRepository.findById(id);
         if (receta.isPresent()) {
