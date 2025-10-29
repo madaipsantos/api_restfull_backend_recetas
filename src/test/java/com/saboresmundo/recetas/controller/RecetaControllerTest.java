@@ -1,5 +1,6 @@
-
 package com.saboresmundo.recetas.controller;
+
+import com.saboresmundo.recetas.repository.ComentarioRecetaRepository;
 
 import com.saboresmundo.recetas.dto.RecetaResponse;
 import com.saboresmundo.recetas.service.RecetaService;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 })
 })
 @AutoConfigureMockMvc(addFilters = false)
+
 class RecetaControllerTest {
 
         @Autowired
@@ -29,6 +31,49 @@ class RecetaControllerTest {
 
         @MockBean
         private RecetaService recetaService;
+
+        @MockBean
+        private ComentarioRecetaRepository comentarioRecetaRepository;
+
+        @MockBean
+        private com.saboresmundo.recetas.repository.RecetaRepository recetaRepository;
+
+        @MockBean
+        private com.saboresmundo.recetas.repository.UsuarioRepository usuarioRepository;
+
+        @MockBean
+        private com.saboresmundo.recetas.service.ComentarioService comentarioService;
+
+        @Test
+        void deveEditarComentarioComSucesso() throws Exception {
+                Long recetaId = 1L;
+                Long comentarioId = 10L;
+                String payload = "{" +
+                                "\"comentario\":\"Nuevo comentario editado\"," +
+                                "\"valoracion\":5" +
+                                "}";
+
+                // Simular que la receta y el comentario existen
+                com.saboresmundo.recetas.model.Receta receta = new com.saboresmundo.recetas.model.Receta();
+                receta.setId(recetaId);
+                com.saboresmundo.recetas.model.ComentarioReceta comentario = new com.saboresmundo.recetas.model.ComentarioReceta();
+                comentario.setId(comentarioId);
+                comentario.setReceta(receta);
+
+                Mockito.when(recetaRepository.findById(recetaId)).thenReturn(java.util.Optional.of(receta));
+                Mockito.when(comentarioRecetaRepository.findById(comentarioId))
+                                .thenReturn(java.util.Optional.of(comentario));
+                Mockito.when(comentarioService.editarComentario(comentarioId, "Nuevo comentario editado", 5))
+                                .thenReturn(comentario);
+                Mockito.when(comentarioRecetaRepository.findByReceta(receta))
+                                .thenReturn(java.util.Collections.singletonList(comentario));
+
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .put("/api/recetas/" + recetaId + "/comentarios/" + comentarioId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(payload))
+                                .andExpect(status().isOk());
+        }
 
         @Test
         void deveCriarRecetaComSucesso() throws Exception {
