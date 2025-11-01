@@ -432,4 +432,48 @@ class RecetaServiceTest {
         paso.setDescripcion(descripcion);
         return paso;
     }
+
+    @Test
+    void debeObtenerRecetasPorUsuario() {
+        // Arrange
+        Long usuarioId = 1L;
+        Receta receta1 = new Receta();
+        receta1.setTitulo("Receta 1");
+        receta1.setUsuario(usuario);
+        setIdUsingReflection(receta1, 1L);
+
+        Receta receta2 = new Receta();
+        receta2.setTitulo("Receta 2");
+        receta2.setUsuario(usuario);
+        setIdUsingReflection(receta2, 2L);
+
+        when(recetaRepository.findByUsuarioId(usuarioId))
+            .thenReturn(java.util.List.of(receta1, receta2));
+
+        // Act
+        List<RecetaResponse> recetas = recetaService.obtenerRecetasPorUsuario(usuarioId);
+
+        // Assert
+        assertNotNull(recetas);
+        assertEquals(2, recetas.size());
+        assertEquals("Receta 1", recetas.get(0).getTitulo());
+        assertEquals("Receta 2", recetas.get(1).getTitulo());
+        verify(recetaRepository).findByUsuarioId(usuarioId);
+    }
+
+    @Test
+    void debeRetornarListaVaciaParaUsuarioSinRecetas() {
+        // Arrange
+        Long usuarioId = 1L;
+        when(recetaRepository.findByUsuarioId(usuarioId))
+            .thenReturn(java.util.Collections.emptyList());
+
+        // Act
+        List<RecetaResponse> recetas = recetaService.obtenerRecetasPorUsuario(usuarioId);
+
+        // Assert
+        assertNotNull(recetas);
+        assertTrue(recetas.isEmpty());
+        verify(recetaRepository).findByUsuarioId(usuarioId);
+    }
 }
