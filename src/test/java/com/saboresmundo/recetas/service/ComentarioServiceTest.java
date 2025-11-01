@@ -5,11 +5,15 @@ import com.saboresmundo.recetas.model.Receta;
 import com.saboresmundo.recetas.model.Usuario;
 import com.saboresmundo.recetas.repository.ComentarioRecetaRepository;
 import com.saboresmundo.recetas.repository.RecetaRepository;
+import com.saboresmundo.recetas.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +32,9 @@ class ComentarioServiceTest {
 
     @Mock
     private RecetaRepository recetaRepository;
+
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
     @InjectMocks
     private ComentarioService comentarioService;
@@ -50,9 +57,17 @@ class ComentarioServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
+        // Configurar autenticación de prueba
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("test@example.com");
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
+
         // Configurar usuario de prueba
         usuario = new Usuario();
         usuario.setNombre("Test User");
+        usuario.setEmail("test@example.com");
         setIdUsingReflection(usuario, 1L);
 
         // Configurar receta de prueba
@@ -169,5 +184,76 @@ class ComentarioServiceTest {
         assertThrows(RuntimeException.class, () -> {
             comentarioService.editarComentario(999L, "Nuevo comentario", 5);
         });
+    }
+
+    @Test
+    void debeEliminarComentarioConExito() {
+        // Arrange
+        when(comentarioRecetaRepository.findById(1L)).thenReturn(Optional.of(comentario));
+        doNothing().when(comentarioRecetaRepository).delete(any(ComentarioReceta.class));
+
+        // Act
+        comentarioService.eliminarComentario(1L);
+
+        // Assert
+        verify(comentarioRecetaRepository).delete(comentario);
+    }
+
+    @Test
+    void debeRetornarErrorSiComentarioNoExisteAlEliminar() {
+        // Arrange
+        when(comentarioRecetaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            comentarioService.eliminarComentario(999L);
+        });
+        verify(comentarioRecetaRepository, never()).delete(any());
+    }
+
+    @Test
+    void noDebePermitirEditarComentarioDeOtroUsuario() {
+        // Arrange
+        Usuario otroUsuario = new Usuario();
+        otroUsuario.setNombre("Otro Usuario");
+        otroUsuario.setEmail("otro@example.com");
+        setIdUsingReflection(otroUsuario, 2L);
+
+        ComentarioReceta comentarioDeOtroUsuario = new ComentarioReceta();
+        comentarioDeOtroUsuario.setComentario("Comentario de otro usuario");
+        comentarioDeOtroUsuario.setUsuario(otroUsuario);
+        comentarioDeOtroUsuario.setReceta(receta);
+        setIdUsingReflection(comentarioDeOtroUsuario, 1L);
+
+        when(comentarioRecetaRepository.findById(1L)).thenReturn(Optional.of(comentarioDeOtroUsuario));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            comentarioService.editarComentario(1L, "Intento de edición", 4);
+        });
+        verify(comentarioRecetaRepository, never()).save(any());
+    }
+
+    @Test
+    void noDebePermitirEliminarComentarioDeOtroUsuario() {
+        // Arrange
+        Usuario otroUsuario = new Usuario();
+        otroUsuario.setNombre("Otro Usuario");
+        otroUsuario.setEmail("otro@example.com");
+        setIdUsingReflection(otroUsuario, 2L);
+
+        ComentarioReceta comentarioDeOtroUsuario = new ComentarioReceta();
+        comentarioDeOtroUsuario.setComentario("Comentario de otro usuario");
+        comentarioDeOtroUsuario.setUsuario(otroUsuario);
+        comentarioDeOtroUsuario.setReceta(receta);
+        setIdUsingReflection(comentarioDeOtroUsuario, 1L);
+
+        when(comentarioRecetaRepository.findById(1L)).thenReturn(Optional.of(comentarioDeOtroUsuario));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            comentarioService.eliminarComentario(1L);
+        });
+        verify(comentarioRecetaRepository, never()).delete(any());
     }
 }
