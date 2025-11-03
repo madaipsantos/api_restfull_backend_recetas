@@ -87,7 +87,57 @@ class AuthServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashed");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertDoesNotThrow(() -> authService.register(request));
+        var response = authService.register(request);
+        
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Usuario registrado", response.getBody());
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
+        
+        // Verificar que se guardó con el rol correcto
+        verify(usuarioRepository).save(argThat(usuario -> 
+            usuario.getRol().equals("USUARIO") &&
+            usuario.getEmail().equals(request.getEmail()) &&
+            usuario.getNombre().equals(request.getNombre()) &&
+            usuario.getPasswordHash().equals("hashed")
+        ));
+    }
+
+    @Test
+    void testLoginConPasswordIncorrecta() {
+        AuthService.LoginRequest loginRequest = new AuthService.LoginRequest("test@email.com", "passwordIncorrecta");
+        Usuario usuario = new Usuario();
+        usuario.setEmail("test@email.com");
+        usuario.setPasswordHash("hash");
+        
+        when(usuarioRepository.findByEmail(loginRequest.getEmail())).thenReturn(java.util.Optional.of(usuario));
+        when(passwordEncoder.matches(loginRequest.getPassword(), usuario.getPasswordHash())).thenReturn(false);
+
+        var response = authService.login(loginRequest);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertEquals("Credenciales inválidas", response.getBody());
+        verify(usuarioRepository, times(1)).findByEmail(loginRequest.getEmail());
+        verify(passwordEncoder, times(1)).matches(loginRequest.getPassword(), usuario.getPasswordHash());
+        verify(jwtUtil, never()).generateToken(anyString());
+    }
+
+    @Test
+    void testRegisterConFoto() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre("Test");
+        request.setEmail("test@email.com");
+        request.setPassword("password");
+        request.setFoto("base64FotoString");
+
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = authService.register(request);
+        
+        assertEquals(200, response.getStatusCodeValue());
+        verify(usuarioRepository).save(argThat(usuario -> 
+            usuario.getFoto().equals("base64FotoString") &&
+            usuario.getRol().equals("USUARIO")
+        ));
     }
 }
