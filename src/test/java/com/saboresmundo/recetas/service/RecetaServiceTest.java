@@ -476,4 +476,79 @@ class RecetaServiceTest {
         assertTrue(recetas.isEmpty());
         verify(recetaRepository).findByUsuarioId(usuarioId);
     }
+
+    @Test
+    void debeListarTodasLasRecetasSinFiltro() {
+        // Arrange
+        Receta receta1 = new Receta();
+        receta1.setTitulo("Paella");
+        Receta receta2 = new Receta();
+        receta2.setTitulo("Gazpacho");
+        when(recetaRepository.findAll()).thenReturn(java.util.List.of(receta1, receta2));
+
+        // Act
+        List<Receta> recetas = recetaService.listarRecetas(null);
+
+        // Assert
+        assertNotNull(recetas);
+        assertEquals(2, recetas.size());
+        assertEquals("Paella", recetas.get(0).getTitulo());
+        assertEquals("Gazpacho", recetas.get(1).getTitulo());
+        verify(recetaRepository).findAll();
+        verify(recetaRepository, never()).findByTituloContainingIgnoreCase(any());
+    }
+
+    @Test
+    void debeManejarErrorAlGuardarPasos() {
+        // Arrange
+        RecetaRequest.PasoRequest pasoRequest = new RecetaRequest.PasoRequest();
+        pasoRequest.setOrden(1);
+        pasoRequest.setDescripcion("Paso con error");
+        recetaRequest.setPasos(java.util.List.of(pasoRequest));
+        
+        when(recetaRepository.save(any(Receta.class))).thenAnswer(i -> {
+            Receta r = i.getArgument(0);
+            setIdUsingReflection(r, 1L);
+            return r;
+        });
+        
+        when(pasoRecetaRepository.save(any()))
+            .thenThrow(new RuntimeException("Error al guardar paso"));
+
+        // Act
+        var response = recetaService.crearReceta(recetaRequest);
+
+        // Assert
+        assertNotNull(response);
+        assertNotNull(response.getMensaje());
+        assertTrue(response.getMensaje().contains("Error al crear receta"));
+        verify(recetaRepository).save(any());
+        verify(pasoRecetaRepository).save(any());
+    }
+
+    @Test
+    void debePermitirEliminarRecetaComoAdmin() {
+        // Arrange
+        Long id = 1L;
+        Usuario otroUsuario = new Usuario();
+        setIdUsingReflection(otroUsuario, 2L);
+        
+        usuario.setRol("ADMIN");
+        
+        Receta recetaExistente = new Receta();
+        setIdUsingReflection(recetaExistente, id);
+        recetaExistente.setUsuario(otroUsuario);
+        
+        when(recetaRepository.findById(id)).thenReturn(java.util.Optional.of(recetaExistente));
+
+        // Act
+        var response = recetaService.eliminarReceta(id);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("Receta eliminada correctamente", response.getMensaje());
+        verify(recetaIngredienteRepository).deleteByReceta(recetaExistente);
+        verify(pasoRecetaRepository).deleteByReceta(recetaExistente);
+        verify(recetaRepository).delete(recetaExistente);
+    }
 }
