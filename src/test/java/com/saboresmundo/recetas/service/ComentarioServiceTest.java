@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -255,5 +256,73 @@ class ComentarioServiceTest {
             comentarioService.eliminarComentario(1L);
         });
         verify(comentarioRecetaRepository, never()).delete(any());
+    }
+
+    @Test
+    void debeEditarSoloComentarioSinValoracion() {
+        // Arrange
+        when(comentarioRecetaRepository.findById(1L)).thenReturn(Optional.of(comentario));
+        when(comentarioRecetaRepository.save(any(ComentarioReceta.class))).thenReturn(comentario);
+
+        String nuevoComentario = "Solo actualizar comentario";
+        Integer valoracionOriginal = comentario.getValoracion();
+
+        // Act
+        ComentarioReceta resultado = comentarioService.editarComentario(1L, nuevoComentario, null);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(nuevoComentario, resultado.getComentario());
+        assertEquals(valoracionOriginal, resultado.getValoracion());
+        verify(comentarioRecetaRepository).save(comentario);
+    }
+
+    @Test
+    void debeEditarSoloValoracionSinComentario() {
+        // Arrange
+        when(comentarioRecetaRepository.findById(1L)).thenReturn(Optional.of(comentario));
+        when(comentarioRecetaRepository.save(any(ComentarioReceta.class))).thenReturn(comentario);
+
+        String comentarioOriginal = comentario.getComentario();
+        Integer nuevaValoracion = 3;
+
+        // Act
+        ComentarioReceta resultado = comentarioService.editarComentario(1L, null, nuevaValoracion);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(comentarioOriginal, resultado.getComentario());
+        assertEquals(nuevaValoracion, resultado.getValoracion());
+        verify(comentarioRecetaRepository).save(comentario);
+    }
+
+    @Test
+    void noDebePermitirValoracionInvalida() {
+        // Arrange
+        when(comentarioRecetaRepository.findById(1L)).thenReturn(Optional.of(comentario));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> 
+            comentarioService.editarComentario(1L, "Comentario", 6)
+        );
+        assertThrows(RuntimeException.class, () -> 
+            comentarioService.editarComentario(1L, "Comentario", 0)
+        );
+        verify(comentarioRecetaRepository, never()).save(any());
+    }
+
+    @Test
+    void debeRetornarListaVaciaCuandoRecetaNoTieneComentarios() {
+        // Arrange
+        when(recetaRepository.findById(1L)).thenReturn(Optional.of(receta));
+        when(comentarioRecetaRepository.findByReceta(receta)).thenReturn(Collections.emptyList());
+
+        // Act
+        List<ComentarioReceta> comentarios = comentarioService.verComentarios(1L);
+
+        // Assert
+        assertNotNull(comentarios);
+        assertTrue(comentarios.isEmpty());
+        verify(comentarioRecetaRepository).findByReceta(receta);
     }
 }
