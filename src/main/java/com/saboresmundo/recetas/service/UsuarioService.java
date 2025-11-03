@@ -9,10 +9,8 @@ import java.util.List;
 
 @Service
 public class UsuarioService {
-    // Simulación de acceso a datos. Reemplazar por repositorio real.
     public Usuario findById(Long id) {
-        // TODO: Implementar acceso a base de datos
-        return null;
+        return usuarioRepository.findById(id).orElse(null);
     }
 
     public Usuario getAuthenticatedUser() {
